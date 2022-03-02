@@ -1,35 +1,36 @@
+nosex = 0;
+nosey = 0;
+difference = 0;
+rightwristx = 0;
+leftwristx = 0;
+
 function setup() {
-    canvas = createCanvas(300, 300);
-    canvas.center();
     video = createCapture(VIDEO);
-    video.hide();
-    classifier = ml5.imageClassifier('MobileNet', modelLoaded);
+    video.size(550, 500);
+    canvas = createCanvas(550, 550);
+    canvas.position(550, 150);
+    poseNet = ml5.poseNet(video, modelLoaded);
+    poseNet.on('pose', gotPoses)
 }
 
-function modelLoaded() {
-    console.log('modelLoaded');
+function modelLoaded() { console.log('postNet is initialized'); }
+
+function gotPoses(results) {
+    if (results.length > 0) {
+        console.log(results);
+        nosex = results[0].pose.nose.x;
+        nosey = results[0].pose.nose.y;
+        leftwristx = results[0].pose.leftWrist.x;
+        rightwristx = results[0].pose.rightWrist.x;
+        difference = floor(leftwristx - rightwristx);
+
+    }
 }
 
 function draw() {
-    image(video, 0, 0, 300, 300);
-    classifier.classify(video, gotResult);
-}
-var previous_result = '';
-
-function gotResult(error, results) {
-    if (error) {
-        console.error(error);
-    } else {
-        if ((results[0].confidence > 0.5) && (previous_result != results[0].label)) {
-            console.log(results);
-            previous_result = results[0].label;
-            var synth = window.speechSynthesis;
-            speak_data = "object detected is-" + results[0].label;
-            var utterThis = new SpeechSynthesisUtterance(speak_data);
-            synth.speak(utterThis);
-            document.getElementById("result_object_name").innerHTML = results[0].label;
-            document.getElementById("result_object_accuracy").innerHTML = results[0].confidence.toFixed(3);
-
-        }
-    }
+    background('#969A97');
+    document.getElementById("square_side").inerHTML = "width and height of a square will be=" + difference + "px";
+    fill('#F90093');
+    stroke('#F90093');
+    square(nosex, nosey, difference);
 }
